@@ -1,0 +1,73 @@
+# config/config.yaml
+# Central configuration for the BehaveGuard Prompt Injection & Jailbreak
+# Detection System. Every module reads its settings from here rather than
+# hardcoding values, so a full pipeline run is reproducible from this file
+# alone.
+
+data:
+  raw_path: "dataset/dataset.csv"          # raw CSV with 'text' and 'label' columns
+  text_column: "text"
+  label_column: "label"
+  cleaned_path: "dataset/dataset_cleaned.csv"
+  test_size: 0.2
+  random_state: 42
+
+preprocessing:
+  lowercase: true
+  remove_urls: true
+  remove_html: true
+  remove_punctuation: true
+  remove_numbers: true
+  remove_stopwords: true
+  lemmatize: true
+
+behavioral:
+  feature_dim: 15                          # see features/behavioral_features.py for the list
+
+tfidf:
+  max_features: 2000                       # kept modest relative to the ~300-row dataset to limit overfitting risk
+  ngram_range: [1, 2]
+  stop_words: "english"
+
+embeddings:
+  # "transformer" requires network access to huggingface.co to download
+  # microsoft/deberta-v3-base; falls back to "hashing" (a deterministic,
+  # offline sentence embedding proxy) if unavailable. See
+  # features/transformer_embeddings.py for details.
+  backend: "auto"                          # "auto" | "transformer" | "hashing"
+  model_name: "microsoft/deberta-v3-base"
+  max_length: 256
+  hidden_size: 768
+  batch_size: 16
+
+model:
+  hidden_dims: [256, 64]
+  num_classes: 2
+  dropout: 0.3
+
+training:
+  epochs: 15
+  batch_size: 16
+  learning_rate: 0.0005
+  weight_decay: 0.00001
+  device: "auto"                           # "auto" | "cpu" | "cuda"
+  use_class_weights: true
+
+output:
+  model_dir: "models/artifacts"
+  model_path: "models/artifacts/model.pt"
+  vectorizer_path: "models/artifacts/tfidf_vectorizer.pkl"
+  embedder_dir: "models/artifacts/embedder"
+  config_snapshot_path: "models/artifacts/config.yaml"
+  metrics_path: "evaluation/reports/eval_metrics.json"
+  confusion_matrix_path: "evaluation/reports/confusion_matrix.png"
+  roc_curve_path: "evaluation/reports/roc_curve.png"
+
+logging:
+  level: "INFO"
+  log_file: "behaveguard.log"
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  title: "BehaveGuard Prompt Injection Detection API"
